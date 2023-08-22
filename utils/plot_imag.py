@@ -26,10 +26,10 @@ def plot_stock_price_trend_multi_same_scale(df, df2, title=None):
     fig = go.Figure()
     
     # 添加股票收盘价曲线
-    fig.add_trace(go.Scatter(x=merged_df['日期'], y=merged_df['收盘_股票'], mode='lines', name='后复权'))
+    fig.add_trace(go.Scatter(x=merged_df['日期'], y=merged_df['收盘_股票'], mode='lines', name='df1'))
     
     # 添加新曲线
-    fig.add_trace(go.Scatter(x=merged_df['日期'], y=merged_df['收盘_新曲线'], mode='lines', name='前复权'))
+    fig.add_trace(go.Scatter(x=merged_df['日期'], y=merged_df['收盘_新曲线'], mode='lines', name='df2'))
     
     fig.update_xaxes(tickformat='%Y-%m-%d', nticks=10, showgrid=True)
     fig.update_yaxes(showgrid=True)
@@ -39,6 +39,10 @@ def plot_stock_price_trend_multi_same_scale(df, df2, title=None):
 
 
 def plot_stock_price_trend_multi(df, df2, day=None,indicator=None):
+    if day is None:
+        day='日期'
+    if indicator is None:
+        indicator = '收盘'
     # 创建图表
     fig = go.Figure()
 
