@@ -1,6 +1,6 @@
 import plotly.graph_objects as go
 import pandas as pd
-def plot_stock_price_trend(df, title=None):
+def plot_stock_price_trend(df, title=None, save_path=None):
     fig = go.Figure()
 
     # 添加收盘价曲线
@@ -12,7 +12,8 @@ def plot_stock_price_trend(df, title=None):
     fig.update_xaxes(tickformat='%Y-%m-%d', nticks=10, showgrid=True)
     fig.update_yaxes(showgrid=True)
     fig.update_layout(title=title, hovermode='x unified')
-
+    if save_path:
+        fig.write_image(save_path)  # 这将图表保存为图片文件
     fig.show()
 
 def plot_stock_price_trend_multi_same_scale(df, df2, title=None):
