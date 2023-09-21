@@ -25,8 +25,7 @@ def plot_etf300():
     # 绘制底部直线
     close_20190102 = df_etf[df_etf['日期'] == '2019-01-02']['收盘'].values[0] #19年的底
     close_20221031 = df_etf[df_etf['日期'] == '2022-10-31']['收盘'].values[0] #22年的底
-    close_latest = df_etf['收盘'].iloc[-1] #最新日期
-    x_range = df_etf['日期'].iloc[-1] - df_etf['日期'].iloc[0] # 获取底部直线横跨的x轴范围
+
     # 计算直线的斜率和截距
     slope = (close_20221031 - close_20190102) / (pd.Timestamp('2022-10-31') - pd.Timestamp('2019-01-02')).days
     intercept = close_20190102 - slope * (pd.Timestamp('2019-01-02') - df_etf['日期'].iloc[0]).days

@@ -4,8 +4,8 @@ sys.path.append(current_working_directory)
 
 from utils import send_email
 from image_module.etf300 import plot_etf300
-from image_module.guzhailicha import plot_guzhailicha_partial
-from image_module.guzhailicha2 import plot_guzhailicha
+from image_module.guzhailicha_partial import plot_guzhailicha_partial
+from image_module.guzhailicha import plot_guzhailicha
 
 
 if __name__ == "__main__":
