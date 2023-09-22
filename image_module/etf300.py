@@ -51,6 +51,8 @@ def plot_etf300():
                  xy=(df_etf.iloc[-1]['日期'], df_etf.iloc[-1]['收盘']),
                  xytext=(-110, -50), textcoords='offset points',
                  arrowprops=dict(arrowstyle='->', color='black'))
+    # 显示图表
+    plt.grid(True)
     # 保存图表为临时文件
     chart_tmp = 'chart_etf300.png'
     plt.savefig(chart_tmp)

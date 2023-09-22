@@ -52,7 +52,8 @@ def plot_guzhailicha():
                  xy=(df.iloc[-1]['日期'], df.iloc[-1]['沪深300指数']),
                  xytext=(-110, -50), textcoords='offset points',
                  arrowprops=dict(arrowstyle='->', color='black'))
-
+    # 显示图表
+    plt.grid(True)
     # 保存图表为临时文件
     chart_tmp = 'chart_guzhailicha_all.png'
     plt.savefig(chart_tmp)
