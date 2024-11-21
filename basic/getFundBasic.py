@@ -11,8 +11,8 @@ fund_data = pd.DataFrame(columns=['基金代码', '基金简称', '基金类型'
 
 # 遍历每个基金代码，获取其最新规模
 for index, row in fund_list.iterrows():
-    if row['基金代码']=='000002':
-        print("here")
+    # if row['基金代码']=='000002':
+    #     print("here")
     try:
         fund_info_df = ak.fund_individual_basic_info_xq(symbol=row['基金代码'])
         if not fund_info_df.empty:
