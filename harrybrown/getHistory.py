@@ -12,23 +12,30 @@ plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体，确保系统中�
 plt.rcParams['axes.unicode_minus'] = False
 
 # 沪深300 2009-07-10
-hushen300_df = ak.fund_open_fund_info_em(symbol="000051", indicator="单位净值走势")
+hushen300_df = ak.fund_open_fund_info_em(symbol="110020", indicator="累计净值走势")
 # 黄金 2020-07-16
-gold_df = ak.fund_open_fund_info_em(symbol="008701", indicator="单位净值走势")
+gold_df = ak.fund_open_fund_info_em(symbol="002611", indicator="累计净值走势")
 # 国债 2016-09-26
-guozhai_df = ak.fund_open_fund_info_em(symbol="003376", indicator="单位净值走势")
+guozhai_df = ak.fund_open_fund_info_em(symbol="003376", indicator="累计净值走势")
+# 现金
+cash_df = ak.fund_open_fund_info_em(symbol="070009", indicator="累计净值走势")
+
 
 # 转换净值日期为日期格式，方便对齐时间
 hushen300_df['净值日期'] = pd.to_datetime(hushen300_df['净值日期'])
 gold_df['净值日期'] = pd.to_datetime(gold_df['净值日期'])
 guozhai_df['净值日期'] = pd.to_datetime(guozhai_df['净值日期'])
+cash_df['净值日期'] = pd.to_datetime(cash_df['净值日期'])
 
 # 合并数据
-merged_df = hushen300_df[['净值日期', '单位净值']].rename(columns={'单位净值': '沪深300'}).merge(
-    gold_df[['净值日期', '单位净值']].rename(columns={'单位净值': '黄金'}), on='净值日期', how='inner'
+merged_df = hushen300_df[['净值日期', '累计净值']].rename(columns={'累计净值': '沪深300'}).merge(
+    gold_df[['净值日期', '累计净值']].rename(columns={'累计净值': '黄金'}), on='净值日期', how='inner'
 ).merge(
-    guozhai_df[['净值日期', '单位净值']].rename(columns={'单位净值': '国债'}), on='净值日期', how='inner'
+    guozhai_df[['净值日期', '累计净值']].rename(columns={'累计净值': '国债'}), on='净值日期', how='inner'
+).merge(
+    cash_df[['净值日期', '累计净值']].rename(columns={'累计净值': '现金'}), on='净值日期', how='inner'
 )
+
 
 # 获取回测的起始和结束日期
 start_date = merged_df['净值日期'].iloc[0]
@@ -36,7 +43,7 @@ end_date = merged_df['净值日期'].iloc[-1]
 
 # 初始净值设置
 initial_weights = {'沪深300': 0.25, '黄金': 0.25, '国债': 0.25, '现金': 0.25}
-merged_df[['沪深300', '黄金', '国债']] /= merged_df[['沪深300', '黄金', '国债']].iloc[0]  # 归一化净值
+merged_df[['沪深300', '黄金', '国债', '现金']] /= merged_df[['沪深300', '黄金', '国债', '现金']].iloc[0]  # 归一化净值
 merged_df['现金'] = 1.0  # 假设现金保持1.0净值
 
 # 计算组合净值

@@ -6,15 +6,18 @@ matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 
 # 设置中文字体
-plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']
+# 设置中文字体
+plt.rcParams['font.family'] = 'sans-serif'
+plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用黑体，确保系统中安装了该字体
+# plt.rcParams['font.sans-serif'] = ['Arial Unicode MS']
 plt.rcParams['axes.unicode_minus'] = False  # 正确显示负号
 
 # 获取数据
 funds = {
-    "110020": ak.fund_open_fund_info_em(symbol="110020", indicator="单位净值走势"),
-    "002611": ak.fund_open_fund_info_em(symbol="002611", indicator="单位净值走势"),
-    "003376": ak.fund_open_fund_info_em(symbol="003376", indicator="单位净值走势"),
-    "070009": ak.fund_open_fund_info_em(symbol="070009", indicator="单位净值走势"),
+    "110020": ak.fund_open_fund_info_em(symbol="110020", indicator="累计净值走势"),
+    "002611": ak.fund_open_fund_info_em(symbol="002611", indicator="累计净值走势"),
+    "003376": ak.fund_open_fund_info_em(symbol="003376", indicator="累计净值走势"),
+    "070009": ak.fund_open_fund_info_em(symbol="070009", indicator="累计净值走势"),
 }
 
 # 基金代码与中文名称映射
@@ -28,7 +31,7 @@ fund_names = {
 # 整理数据
 data = pd.DataFrame()
 for fund_code, fund_data in funds.items():
-    fund_data = fund_data.rename(columns={"净值日期": "date", "单位净值": fund_code})  # 重命名
+    fund_data = fund_data.rename(columns={"净值日期": "date", "累计净值": fund_code})  # 重命名
     fund_data["date"] = pd.to_datetime(fund_data["date"])  # 转换日期格式
     fund_data = fund_data[["date", fund_code]]  # 保留日期和单位净值
     if data.empty:
@@ -53,7 +56,7 @@ plt.figure(figsize=(12, 6))
 for fund_code in funds.keys():
     plt.plot(data["date"], data[fund_code], label=fund_names[fund_code])  # 使用中文名称作为图例
 
-plt.title("基金单位净值走势（共同开始时间，归一化）", fontsize=16)
+plt.title("基金累计净值走势（共同开始时间，归一化）", fontsize=16)
 plt.xlabel("日期", fontsize=12)
 plt.ylabel("归一化净值", fontsize=12)
 plt.legend(fontsize=10)
