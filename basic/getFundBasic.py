@@ -48,4 +48,4 @@ for index, row in fund_list.iterrows():
 
 # 将结果保存为 CSV 文件
 fund_data.to_csv("./data/allFundBasicData.csv", index=False, encoding="utf-8-sig")
-print("基金数据已保存至 fund_data2.csv")
+print("基金数据已保存至 allFundBasicData.csv")
