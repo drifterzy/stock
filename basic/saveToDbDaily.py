@@ -93,16 +93,16 @@ if __name__ == "__main__":
         current_date = datetime.now().strftime("%Y-%m-%d")
         # 如果函数执行成功，写入文件
         if result:
-            with open("C:\\Users\\leo\\Desktop\\update_status.txt", "w", encoding="utf-8") as file:
+            with open("C:\\Users\\leo\\Desktop\\update_status.txt", "a", encoding="utf-8") as file:
                 file.write(f"{current_date} - 更新基金数据成功！\n")
             print("结果已写入文件：update_status.txt")
         else:
-            with open("C:\\Users\\leo\\Desktop\\update_status.txt", "w", encoding="utf-8") as file:
+            with open("C:\\Users\\leo\\Desktop\\update_status.txt", "a", encoding="utf-8") as file:
                 file.write(f"{current_date} - 更新基金数据失败。\n")
             print("更新失败的结果已写入文件：update_status.txt")
     except Exception as e:
         # 处理异常并写入错误信息
         current_date = datetime.now().strftime("%Y-%m-%d")
-        with open("C:\\Users\\leo\\Desktop\\update_status.txt", "w", encoding="utf-8") as file:
+        with open("C:\\Users\\leo\\Desktop\\update_status.txt", "a", encoding="utf-8") as file:
             file.write(f"{current_date} - 更新基金数据时发生错误：{str(e)}\n")
         print("异常信息已写入文件：update_status.txt")
