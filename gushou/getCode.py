@@ -17,6 +17,7 @@ try:
     df = df[df['季度胜率'] >= 0.8]
     df = df[~df['净值恢复所需天数'].str.contains("尚未恢复", case=False, na=False)]
 
+    # 最大回撤小于0.01，创新高大于0.5
 
     # 输出清洗后的数据
     print("清洗后的数据：")

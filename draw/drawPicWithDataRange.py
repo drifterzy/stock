@@ -14,32 +14,41 @@ db_config = {
 }
 
 
-def generate_fund_chart(fund_codes, output_path):
+def generate_fund_chart(fund_codes, output_path, date_range=None):
     """
     生成包含多基金折线图的 Excel 文件。
 
     :param fund_codes: 基金代码列表。
     :param output_path: 输出文件路径。
+    :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
     """
-    def fetch_data_from_db(fund_codes):
+    def fetch_data_from_db(fund_codes, date_range):
         """
         从数据库获取多个基金代码的累计净值数据。
         :param fund_codes: 基金代码列表。
+        :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
         :return: categories 和 data_sets
         """
         query = """
         SELECT fund_code, net_value_date, cumulative_net_value
         FROM fund_net_value
         WHERE fund_code IN (%s)
-        ORDER BY net_value_date
         """
         placeholders = ", ".join(["%s"] * len(fund_codes))
         query = query % placeholders
 
+        # 添加日期过滤条件
+        params = fund_codes
+        if date_range:
+            query += " AND net_value_date BETWEEN %s AND %s"
+            params += date_range
+
+        query += " ORDER BY net_value_date"
+
         connection = pymysql.connect(**db_config)
         try:
             with connection.cursor() as cursor:
-                cursor.execute(query, fund_codes)
+                cursor.execute(query, params)
                 rows = cursor.fetchall()
         finally:
             connection.close()
@@ -114,7 +123,7 @@ def generate_fund_chart(fund_codes, output_path):
     wb.remove(wb.active)
 
     # 获取数据并生成图表
-    categories, data_sets = fetch_data_from_db(fund_codes)
+    categories, data_sets = fetch_data_from_db(fund_codes, date_range)
     if data_sets:
         create_line_chart(wb, data_sets, categories, "Fund Comparison")
 
@@ -128,4 +137,5 @@ if __name__ == "__main__":
     # fund_codes = ["004839", "007319", "002058", "002462", "001399", "001400", "007582", "007229", "007951"]
     fund_codes = ["009219", "002920", "004839", "007319", "007582"]
     output_file = "output/多折线图.xlsx"
-    generate_fund_chart(fund_codes, output_file)
+    date_range = ("2024-01-01", "2025-01-09")  # 指定时间范围
+    generate_fund_chart(fund_codes, output_file, date_range)
