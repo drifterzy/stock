@@ -1,7 +1,7 @@
 import akshare as ak
 import pymysql
 import numpy as np
-
+import time
 # 数据库连接配置
 db_config = {
     "host": "localhost",
@@ -50,6 +50,7 @@ def insert_data(fund_code, data):
 
 # 主逻辑
 if __name__ == "__main__":
+    start_time = time.time()  # 程序开始时间
     # 初始化数据库
     setup_database()
 
@@ -68,3 +69,8 @@ if __name__ == "__main__":
             print(f"Error processing fund {fund_code}: {e}")
 
     print("All data processed and stored in the database.")
+    end_time = time.time()  # 程序结束时间
+
+    # 打印程序执行时间
+    elapsed_time = end_time - start_time
+    print(f"程序执行完毕，总耗时：{elapsed_time:.2f} 秒")  # 精确到小数点后2位
