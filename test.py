@@ -1,3 +1,4 @@
 import akshare as ak
-fund_name_em_df = ak.fund_name_em()
-print(fund_name_em_df)
+
+fund_individual_detail_info_xq_df = ak.fund_individual_detail_info_xq(symbol="002920")
+print(fund_individual_detail_info_xq_df)
