@@ -125,7 +125,7 @@ def generate_fund_chart(fund_codes, output_path):
 
 # 示例调用
 if __name__ == "__main__":
-    # fund_codes = ["004839", "007319", "002058", "002462", "001399", "001400", "007582", "007229", "007951"]
-    fund_codes = ["009219", "002920", "004839", "007319", "007582"]
-    output_file = "output/多折线图.xlsx"
+    # fund_codes = ["900039"]
+    fund_codes = ["900039", "007551", "900019", "007194", "007195", "006989", "007075", "007828", "675111", "007837"]
+    output_file = "output/多折线图-无时间.xlsx"
     generate_fund_chart(fund_codes, output_file)

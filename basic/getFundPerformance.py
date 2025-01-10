@@ -265,6 +265,7 @@ def calculate_and_save_results(fund_codes):
                 '回撤结束日期': end_date,
                 '回撤持续天数': duration,
                 '净值恢复所需天数': recovery_days if recovery_days is not None else '尚未恢复',
+                '最大回撤修复时间': recovery_days+duration if recovery_days is not None else '尚未恢复',
                 '年化波动率': annualized_volatility,
                 '夏普率': sharpe_ratio,
                 '卡玛率': calmar_ratio,
