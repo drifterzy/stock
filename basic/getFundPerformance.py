@@ -89,6 +89,7 @@ def calculate_annualized_return(df, years=None):
 
 # 计算最大回撤
 def calculate_max_drawdown(df):
+    df = df.copy()  # 添加这行以创建副本
     # 计算每个日期前的累计最大值
     df['rolling_max'] = df['cumulative_net_value'].cummax()
 
@@ -116,6 +117,36 @@ def calculate_max_drawdown(df):
 
     return max_drawdown, drawdown_start_date, drawdown_end_date, drawdown_duration, recovery_days
 
+
+def calculate_second_largest_drawdown(df):
+    """
+    计算第二大回撤及其相关信息。
+
+    参数：
+    - df: 包含 `cumulative_net_value` 的 DataFrame，索引为日期。
+
+    返回：
+    - 第二大回撤的信息，与 `calculate_max_drawdown` 返回类型一致：
+      (max_drawdown, drawdown_start_date, drawdown_end_date, drawdown_duration, recovery_days)
+      如果无法计算第二大回撤，返回 (None, None, None, None, None)。
+    """
+    # 第一次计算最大回撤
+    max_drawdown, drawdown_start_date, drawdown_end_date, drawdown_duration, recovery_days = calculate_max_drawdown(df)
+
+    # 如果没有数据或回撤无法计算，直接返回空值
+    if max_drawdown is None:
+        return None, None, None, None, None
+
+    # 从数据集中移除最大回撤对应的时间段
+    mask = df.index >= drawdown_start_date
+    df_remaining = df[~mask]
+
+    # 如果剩余数据不足以计算回撤，返回空值
+    if df_remaining.empty:
+        return None, None, None, None, None
+
+    # 计算第二大回撤
+    return calculate_max_drawdown(df_remaining)
 
 
 # 计算年化波动率
@@ -246,6 +277,7 @@ def calculate_and_save_results(fund_codes):
             annualized_return3 = calculate_annualized_return(df, 3)
             annualized_return5 = calculate_annualized_return(df, 5)
             max_drawdown, start_date, end_date, duration, recovery_days = calculate_max_drawdown(df)
+            nth_drawdown, start_date2, end_date2, duration2, recovery_days2  = calculate_second_largest_drawdown(df)
             annualized_volatility = calculate_annualized_volatility(df)
             sharpe_ratio = calculate_sharpe_ratio(annualized_return, annualized_volatility)
             calmar_ratio = calculate_calmar_ratio(annualized_return, max_drawdown)
@@ -266,6 +298,12 @@ def calculate_and_save_results(fund_codes):
                 '回撤持续天数': duration,
                 '净值恢复所需天数': recovery_days if recovery_days is not None else '尚未恢复',
                 '最大回撤修复时间': recovery_days+duration if recovery_days is not None else '尚未恢复',
+                '最大回撤2': nth_drawdown,
+                '回撤开始日期2': start_date2,
+                '回撤结束日期2': end_date2,
+                '回撤持续天数2': duration2,
+                '净值恢复所需天数2': recovery_days2 if recovery_days2 is not None else '尚未恢复',
+                '最大回撤修复时间2': recovery_days2 + duration2 if recovery_days is not None else '尚未恢复',
                 '年化波动率': annualized_volatility,
                 '夏普率': sharpe_ratio,
                 '卡玛率': calmar_ratio,

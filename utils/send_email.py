@@ -8,8 +8,8 @@ import smtplib
 def send_email_with_images(body,image_paths):
     # 设置邮件参数
     my_sender = '1074725704@qq.com'  # 发件人邮箱账号
-    my_pass = 'rqcvsqdbwdneicih'  # 发件人邮箱授权码
-    my_receiver = 'drifterzy@163.com'  # 收件人邮箱账号
+    my_pass = 'rwkrjxtmadpphjei'  # 发件人邮箱授权码
+    my_receiver = '1074725704@qq.com'  # 收件人邮箱账号
 
     # 创建带嵌入图片的邮件
     message = MIMEMultipart()
@@ -26,7 +26,7 @@ def send_email_with_images(body,image_paths):
             message.attach(image)
 
     # 发送邮件
-    server = smtplib.SMTP_SSL("smtp.qq.com", 465)  # 发件人邮箱中的SMTP服务器，端口是25
+    server = smtplib.SMTP_SSL("smtp.qq.com", 587)  # 发件人邮箱中的SMTP服务器，端口是25
     server.login(my_sender, my_pass)  # 括号中对应的是发件人邮箱账号、邮箱授权码
     server.sendmail(my_sender, [my_receiver, ], message.as_string())  # 括号中对应的是发件人邮箱账号、收件人邮箱账号、发送邮件
     server.quit()  # 关闭连接

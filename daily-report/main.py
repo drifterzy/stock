@@ -1,5 +1,5 @@
 import sys
-current_working_directory = "D:\project\stock"
+current_working_directory = "C:\project\stock"
 sys.path.append(current_working_directory)
 from image_module.kezhuanzhai import plot_kezhuanzhai
 from utils import send_email
