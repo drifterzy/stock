@@ -86,6 +86,43 @@ def calculate_annualized_return(df, years=None):
     annualized_return = (end_value / start_value) ** (1 / period_years) - 1
     return annualized_return
 
+def calculate_annualized_return_smoothed(df, years=None, window=3):
+    """
+    使用滚动平均平滑净值后计算年化收益率。
+
+    参数:
+    - df: 包含日期索引和累计净值(cumulative_net_value)的 DataFrame。
+    - years: 指定计算近几年的年化收益率，默认为全部数据。
+    - window: 滚动窗口大小，用于平滑累计净值。
+    """
+    if df.empty:
+        return None
+
+    # 计算滚动平均值，平滑净值
+    df['smoothed_cumulative_net_value'] = df['cumulative_net_value'].rolling(window=window, min_periods=1).mean()
+
+    # 筛选近 years 年的数据
+    if years:
+        end_date = df.index[-1]  # 数据的最后日期
+        start_date = end_date - pd.DateOffset(years=years)  # 计算起始日期
+        df = df[df.index >= start_date]
+        if df.empty:  # 如果筛选后没有数据
+            return None
+
+    # 获取平滑后起始和结束净值
+    start_value = float(df['smoothed_cumulative_net_value'].iloc[0])
+    end_value = float(df['smoothed_cumulative_net_value'].iloc[-1])
+
+    # 确定实际的时间跨度（年）
+    period_years = (df.index[-1] - df.index[0]).days / 365
+
+    # 防止除以零
+    if start_value == 0 or period_years == 0:
+        return None
+
+    # 计算年化收益率
+    annualized_return = (end_value / start_value) ** (1 / period_years) - 1
+    return annualized_return
 
 # 计算最大回撤
 def calculate_max_drawdown(df):
@@ -276,6 +313,9 @@ def calculate_and_save_results(fund_codes):
             annualized_return1 = calculate_annualized_return(df, 1)
             annualized_return3 = calculate_annualized_return(df, 3)
             annualized_return5 = calculate_annualized_return(df, 5)
+            annualized_return_smoothed1 = calculate_annualized_return_smoothed(df, 1)
+            annualized_return_smoothed3 = calculate_annualized_return_smoothed(df, 3)
+            annualized_return_smoothed5 = calculate_annualized_return_smoothed(df, 5)
             max_drawdown, start_date, end_date, duration, recovery_days = calculate_max_drawdown(df)
             nth_drawdown, start_date2, end_date2, duration2, recovery_days2  = calculate_second_largest_drawdown(df)
             annualized_volatility = calculate_annualized_volatility(df)
@@ -292,6 +332,9 @@ def calculate_and_save_results(fund_codes):
                 '近1年年化收益率': annualized_return1,
                 '近3年年化收益率': annualized_return3,
                 '近5年年化收益率': annualized_return5,
+                '近1年滚动年化收益率': annualized_return_smoothed1,
+                '近3年滚动年化收益率': annualized_return_smoothed3,
+                '近5年滚动年化收益率': annualized_return_smoothed5,
                 '最大回撤': max_drawdown,
                 '回撤开始日期': start_date,
                 '回撤结束日期': end_date,
@@ -334,8 +377,8 @@ def main():
     start_time = time.time()  # 程序开始时间
 
     fund_codes = get_fund_codes()  # 获取基金代码列表
-    calculate_and_save_results(fund_codes)  # 计算并保存结果
-    # calculate_and_save_results(['002117'])  # 计算并保存结果
+    # calculate_and_save_results(fund_codes)  # 计算并保存结果
+    calculate_and_save_results(['000436'])  # 计算并保存结果
 
     end_time = time.time()  # 程序结束时间
 

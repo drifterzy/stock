@@ -3,6 +3,7 @@ import openpyxl
 from openpyxl import Workbook
 from openpyxl.chart import LineChart, Reference
 from openpyxl.chart.series import SeriesLabel
+from datetime import datetime
 
 # 数据库连接信息
 db_config = {
@@ -13,18 +14,17 @@ db_config = {
     "password": "123456",
 }
 
-
-def generate_fund_chart(fund_codes, output_path, date_range=None):
+def generate_fund_chart(fund_map, output_path, date_range=None):
     """
     生成包含多基金折线图的 Excel 文件。
 
-    :param fund_codes: 基金代码列表。
+    :param fund_map: 基金代码和基金名称的对应关系，例如 {'007551': '基金A', '900019': '基金B'}
     :param output_path: 输出文件路径。
     :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
     """
     def fetch_data_from_db(fund_codes, date_range):
         """
-        从数据库获取多个基金代码的累计净值数据。
+        从数据库获取多个基金代码的累积净值数据。
         :param fund_codes: 基金代码列表。
         :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
         :return: categories, data_sets, min_value, max_value
@@ -38,7 +38,7 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
         query = query % placeholders
 
         # 添加日期过滤条件
-        params = fund_codes
+        params = list(fund_codes)
         if date_range:
             query += " AND net_value_date BETWEEN %s AND %s"
             params += date_range
@@ -76,7 +76,7 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
         data_sets = []
         for fund_code, values in data_by_code.items():
             data = [values.get(date, None) for date in categories]
-            data_sets.append((fund_code, data))
+            data_sets.append((fund_map[fund_code], data))
 
         return categories, data_sets, min_value, max_value
 
@@ -135,6 +135,7 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
     wb.remove(wb.active)
 
     # 获取数据并生成图表
+    fund_codes = list(fund_map.keys())
     categories, data_sets, min_value, max_value = fetch_data_from_db(fund_codes, date_range)
     if data_sets:
         create_line_chart(wb, data_sets, categories, "Fund Comparison", min_value, max_value)
@@ -143,14 +144,20 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
     wb.save(output_path)
     print(f"Chart with multiple funds created and saved to {output_path}!")
 
-
 # 示例调用
 if __name__ == "__main__":
-    # fund_codes = ['007551', '900019', '007194', '006989', '004063', '007075', '007828', '675111',
-    #               '675113', '007837', '003978', '006331', '008383', '008204', '000801', '007562',
-    #               '008176', '000310', '000335', '004010', '003657', '000436', '750002', '000200',
-    #               '007229', '000122', '001316']
-    fund_codes = ['090010', '002611', '003376', '070009']
-    output_file = "output/多折线图-有时间.xlsx"
-    date_range = ("2024-01-01", "2025-01-15")  # 指定时间范围
-    generate_fund_chart(fund_codes, output_file, date_range)
+    fund_map = {
+        '090010': '红利',
+        '002611': '黄金',
+        '003376': '国债',
+        '070009': '短债',
+        '110020': '沪深300'
+
+    }
+    output_file = "./basicReport.xlsx"
+    date_range = ("2024-01-01", datetime.today().strftime("%Y-%m-%d"))  # 指定时间范围
+    generate_fund_chart(fund_map, output_file, date_range)
+
+
+
+
