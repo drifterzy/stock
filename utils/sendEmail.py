@@ -3,29 +3,34 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.base import MIMEBase
 from email import encoders
+from email.header import Header
+from email.utils import formataddr
 from datetime import datetime
 
 def send_email_with_attachments(smtp_server, port, sender_email, sender_password, recipient_email, subject, body,
-                                 attachment_paths):
+                                 attachment_title_mapping):
     # 创建邮件消息
     msg = MIMEMultipart()
-    msg["From"] = sender_email
+    msg["From"] = formataddr((str(Header("邮件发送人", "utf-8")), sender_email))  # 设置发件人信息（支持中文）
     msg["To"] = recipient_email
-    msg["Subject"] = subject
+    msg["Subject"] = Header(subject, "utf-8")  # 邮件主题支持中文
 
     # 添加邮件正文
-    msg.attach(MIMEText(body, "plain"))
+    msg.attach(MIMEText(body, "plain", "utf-8"))
 
-    # 添加附件
-    for attachment_path in attachment_paths:
+    # 添加附件并设置自定义标题（支持中文文件名）
+    for attachment_path, custom_title in attachment_title_mapping.items():
         try:
             with open(attachment_path, "rb") as attachment:
                 part = MIMEBase("application", "octet-stream")
                 part.set_payload(attachment.read())
             encoders.encode_base64(part)
+
+            # 使用 Header 对中文标题进行 MIME 编码
+            encoded_title = Header(custom_title, "utf-8").encode()
             part.add_header(
                 "Content-Disposition",
-                f"attachment; filename={attachment_path.split('/')[-1]}",
+                f'attachment; filename="{encoded_title}"',
             )
             msg.attach(part)
         except Exception as e:
@@ -46,11 +51,11 @@ def send_email_with_attachments(smtp_server, port, sender_email, sender_password
 
 
 if __name__ == "__main__":
-    # 文件路径列表（包含两个附件的路径）
-    attachment_paths = [
-        "C:\\project\\stock\\gushou\\report\\gushouReport.xlsx",  # 第一个附件路径
-        "C:\\project\\stock\\basic\\report\\basicReport.xlsx"  # 第二个附件路径
-    ]
+    # 路径与自定义标题的映射
+    attachment_title_mapping = {
+        "C:\\project\\stock\\gushou\\report\\gushouReport.xlsx": "固收日报.xlsx",
+        "C:\\project\\stock\\basic\\report\\basicReport.xlsx": "基础日报.xlsx",
+    }
 
     # 邮件配置信息
     smtp_server = "smtp.qq.com"  # SMTP 服务器地址，例如 QQ 邮箱
@@ -63,5 +68,5 @@ if __name__ == "__main__":
 
     # 发送邮件
     send_email_with_attachments(
-        smtp_server, port, sender_email, sender_password, recipient_email, subject, body, attachment_paths
+        smtp_server, port, sender_email, sender_password, recipient_email, subject, body, attachment_title_mapping
     )
