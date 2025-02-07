@@ -71,9 +71,9 @@ if __name__ == '__main__':
             stock_list[0].insert(2, code_name)
             res_list.append(stock_list[0])
         # 保存到文件中
-        # df.to_csv("./output/KDJ.csv", encoding='gbk')
+        # df.to_csv("./data/KDJ.csv", encoding='gbk')
     print (res_list)
     res_fields = ['date','code','code_name','open','high','low','close','preclose','volume','amount','adjustflag','turn','pctChg','peTTM','psTTM','pcfNcfTTM','pbMRQ']
     df_res = pd.DataFrame(res_list, columns=res_fields)
-    df_res.to_csv("./output/0526.csv", encoding='gbk')
+    df_res.to_csv("./data/0526.csv", encoding='gbk')
     bs.logout()

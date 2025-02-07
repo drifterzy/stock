@@ -148,6 +148,7 @@ def save_results_to_excel(fund_codes_1, fund_codes_2, start_date, output_file="c
         ws2.add_chart(chart, "E5")
 
     # 保存文件
+
     wb.save(output_file)
     print(f"Combined results saved to {output_file}")
 
@@ -155,7 +156,7 @@ def save_results_to_excel(fund_codes_1, fund_codes_2, start_date, output_file="c
 # 主函数
 if __name__ == "__main__":
     # 已购产品止损
-    fund_codes_1 = ["002920", "009219", "007582", "007319", "004839", "007562", "003657"]
+    fund_codes_1 = ["002920", "009219", "007582", "007319", "004839", "007562", "003657", "007229", "008383"]
     # 待购产品买入
     fund_codes_2 = ["007229"]
     start_date = "2024-01-01"

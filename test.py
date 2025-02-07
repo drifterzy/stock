@@ -1,4 +1,5 @@
-import  akshare as ak
-df = ak.fund_open_fund_daily_em()
-df = df[df['基金代码'].str.contains('090010')]
-print(df)
+import akshare as ak
+
+stock_zh_a_spot_em_df = ak.stock_zh_a_spot_em()
+stock_zh_a_spot_em_df.to_excel('stock_basic.xlsx', index=False)
+print(stock_zh_a_spot_em_df)

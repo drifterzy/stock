@@ -22,9 +22,10 @@ def generate_fund_chart(fund_map, output_path, date_range=None):
     :param output_path: 输出文件路径。
     :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
     """
+
     def fetch_data_from_db(fund_codes, date_range):
         """
-        从数据库获取多个基金代码的累积净值数据。
+        从数据库获取多个基金代码的累积净值数据，并进行归一化处理。
         :param fund_codes: 基金代码列表。
         :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
         :return: categories, data_sets, min_value, max_value
@@ -62,6 +63,9 @@ def generate_fund_chart(fund_map, output_path, date_range=None):
         min_value = float("inf")
         max_value = float("-inf")
 
+        # 获取每个基金的第一个净值，作为归一化的基准
+        first_values = {}
+
         for row in rows:
             fund_code, date, value = row
             if fund_code in data_by_code:
@@ -71,12 +75,17 @@ def generate_fund_chart(fund_map, output_path, date_range=None):
                 min_value = min(min_value, value)
                 max_value = max(max_value, value)
 
+                # 记录每个基金的第一个净值
+                if fund_code not in first_values:
+                    first_values[fund_code] = value
+
         # 将数据格式化为需要的格式
         categories = sorted(categories)
         data_sets = []
         for fund_code, values in data_by_code.items():
-            data = [values.get(date, None) for date in categories]
-            data_sets.append((fund_map[fund_code], data))
+            first_value = first_values[fund_code]  # 获取该基金的第一个净值
+            normalized_data = [values.get(date, None) / first_value for date in categories]  # 归一化数据
+            data_sets.append((fund_map[fund_code], normalized_data))
 
         return categories, data_sets, min_value, max_value
 
@@ -103,7 +112,7 @@ def generate_fund_chart(fund_map, output_path, date_range=None):
         chart = LineChart()
         chart.title = title
         chart.x_axis.title = "Date"
-        chart.y_axis.title = "Cumulative Net Value"
+        chart.y_axis.title = "Normalized Cumulative Net Value"
         chart.x_axis.number_format = "yyyy-mm-dd"  # 设置横轴为日期格式
         chart.x_axis.majorTimeUnit = "days"  # 将横轴的单位设置为天
 
@@ -118,14 +127,24 @@ def generate_fund_chart(fund_map, output_path, date_range=None):
         categories_ref = Reference(sheet, min_col=1, min_row=2, max_row=len(categories) + 1)
         chart.set_categories(categories_ref)
 
+        # 计算纵轴范围，避免图形集中在下部分
+        min_y_value = min([min(data) for _, data in data_sets if any(data)])
+        max_y_value = max([max(data) for _, data in data_sets if any(data)])
+
         # 设置动态纵轴范围
-        margin = (max_value - min_value) * 0.1  # 上下边界增加 10%
-        chart.y_axis.scaling.min = max(0, min_value - margin)  # 确保最小值不低于 0
-        chart.y_axis.scaling.max = max_value + margin
+        margin = (max_y_value - min_y_value) * 0.2  # 上下边界增加 20%
+        chart.y_axis.scaling.min = min_y_value - margin  # 设定最小值，避免图形过于集中
+        chart.y_axis.scaling.max = max_y_value + margin  # 设定最大值
 
         # 设置图表大小
         chart.width = 30
         chart.height = 20
+
+        # 设置所有系列的数据点样式
+        for series in chart.series:
+            series.marker.symbol = "circle"  # 数据点样式为圆形
+            series.marker.size = 4  # 数据点大小
+            series.marker.graphicalProperties.solidFill = "FFFFFF"  # 数据点填充为白色
 
         # 添加图表到工作表
         sheet.add_chart(chart, "K2")
