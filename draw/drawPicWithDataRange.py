@@ -27,7 +27,7 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
         从数据库获取多个基金代码的累计净值数据。
         :param fund_codes: 基金代码列表。
         :param date_range: 时间范围 (start_date, end_date)，格式为 YYYY-MM-DD 的字符串元组。
-        :return: categories 和 data_sets
+        :return: categories, data_sets, min_value, max_value
         """
         query = """
         SELECT fund_code, net_value_date, cumulative_net_value
@@ -59,11 +59,17 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
             data_by_code[fund_code] = {}
 
         categories = set()
+        min_value = float("inf")
+        max_value = float("-inf")
+
         for row in rows:
             fund_code, date, value = row
             if fund_code in data_by_code:
+                value = float(value)  # 确保转换为 float
                 data_by_code[fund_code][date] = value
                 categories.add(date)
+                min_value = min(min_value, value)
+                max_value = max(max_value, value)
 
         # 将数据格式化为需要的格式
         categories = sorted(categories)
@@ -72,11 +78,9 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
             data = [values.get(date, None) for date in categories]
             data_sets.append((fund_code, data))
 
-        return categories, data_sets
+        return categories, data_sets, min_value, max_value
 
-
-    # 修改后的 create_line_chart 函数
-    def create_line_chart(wb, data_sets, categories, title):
+    def create_line_chart(wb, data_sets, categories, title, min_value, max_value):
         """
         在 Excel 工作簿中创建折线图。
         """
@@ -104,14 +108,20 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
         chart.x_axis.majorTimeUnit = "days"  # 将横轴的单位设置为天
 
         # 添加数据和分类到图表
-        for col_idx, (label, _) in enumerate(data_sets, start=2):
-            data_ref = Reference(sheet, min_col=col_idx, min_row=2, max_row=len(categories) + 1)
-            chart.add_data(data_ref, titles_from_data=True)
-            chart.series[-1].tx = SeriesLabel(v=label)
+        for col_idx, (label, data) in enumerate(data_sets, start=2):
+            if any(data):  # 只处理非空列
+                data_ref = Reference(sheet, min_col=col_idx, min_row=2, max_row=len(categories) + 1)
+                chart.add_data(data_ref, titles_from_data=True)
+                chart.series[-1].tx = SeriesLabel(v=label)
 
         # 将日期作为分类
         categories_ref = Reference(sheet, min_col=1, min_row=2, max_row=len(categories) + 1)
         chart.set_categories(categories_ref)
+
+        # 设置动态纵轴范围
+        margin = (max_value - min_value) * 0.1  # 上下边界增加 10%
+        chart.y_axis.scaling.min = max(0, min_value - margin)  # 确保最小值不低于 0
+        chart.y_axis.scaling.max = max_value + margin
 
         # 设置图表大小
         chart.width = 30
@@ -125,9 +135,9 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
     wb.remove(wb.active)
 
     # 获取数据并生成图表
-    categories, data_sets = fetch_data_from_db(fund_codes, date_range)
+    categories, data_sets, min_value, max_value = fetch_data_from_db(fund_codes, date_range)
     if data_sets:
-        create_line_chart(wb, data_sets, categories, "Fund Comparison")
+        create_line_chart(wb, data_sets, categories, "Fund Comparison", min_value, max_value)
 
     # 保存 Excel 文件
     wb.save(output_path)
@@ -136,8 +146,11 @@ def generate_fund_chart(fund_codes, output_path, date_range=None):
 
 # 示例调用
 if __name__ == "__main__":
-    # fund_codes = ["004839", "007319", "002058", "002462", "001399", "001400", "007582", "007229", "007951"]
-    fund_codes = ["004839", "005079", "005754", "006799", "006824", "006829", "006965", "007014", "007319", "007582"]
-    output_file = "output/多折线图.xlsx"
-    date_range = ("2024-01-01", "2025-01-09")  # 指定时间范围
+    # fund_codes = ['007551', '900019', '007194', '006989', '004063', '007075', '007828', '675111',
+    #               '675113', '007837', '003978', '006331', '008383', '008204', '000801', '007562',
+    #               '008176', '000310', '000335', '004010', '003657', '000436', '750002', '000200',
+    #               '007229', '000122', '001316']
+    fund_codes = ['090010', '002611', '003376', '070009']
+    output_file = "output/多折线图-有时间.xlsx"
+    date_range = ("2024-01-01", "2025-01-15")  # 指定时间范围
     generate_fund_chart(fund_codes, output_file, date_range)

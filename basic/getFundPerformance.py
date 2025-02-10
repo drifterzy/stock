@@ -86,9 +86,47 @@ def calculate_annualized_return(df, years=None):
     annualized_return = (end_value / start_value) ** (1 / period_years) - 1
     return annualized_return
 
+def calculate_annualized_return_smoothed(df, years=None, window=3):
+    """
+    使用滚动平均平滑净值后计算年化收益率。
+
+    参数:
+    - df: 包含日期索引和累计净值(cumulative_net_value)的 DataFrame。
+    - years: 指定计算近几年的年化收益率，默认为全部数据。
+    - window: 滚动窗口大小，用于平滑累计净值。
+    """
+    if df.empty:
+        return None
+
+    # 计算滚动平均值，平滑净值
+    df['smoothed_cumulative_net_value'] = df['cumulative_net_value'].rolling(window=window, min_periods=1).mean()
+
+    # 筛选近 years 年的数据
+    if years:
+        end_date = df.index[-1]  # 数据的最后日期
+        start_date = end_date - pd.DateOffset(years=years)  # 计算起始日期
+        df = df[df.index >= start_date]
+        if df.empty:  # 如果筛选后没有数据
+            return None
+
+    # 获取平滑后起始和结束净值
+    start_value = float(df['smoothed_cumulative_net_value'].iloc[0])
+    end_value = float(df['smoothed_cumulative_net_value'].iloc[-1])
+
+    # 确定实际的时间跨度（年）
+    period_years = (df.index[-1] - df.index[0]).days / 365
+
+    # 防止除以零
+    if start_value == 0 or period_years == 0:
+        return None
+
+    # 计算年化收益率
+    annualized_return = (end_value / start_value) ** (1 / period_years) - 1
+    return annualized_return
 
 # 计算最大回撤
 def calculate_max_drawdown(df):
+    df = df.copy()  # 添加这行以创建副本
     # 计算每个日期前的累计最大值
     df['rolling_max'] = df['cumulative_net_value'].cummax()
 
@@ -116,6 +154,36 @@ def calculate_max_drawdown(df):
 
     return max_drawdown, drawdown_start_date, drawdown_end_date, drawdown_duration, recovery_days
 
+
+def calculate_second_largest_drawdown(df):
+    """
+    计算第二大回撤及其相关信息。
+
+    参数：
+    - df: 包含 `cumulative_net_value` 的 DataFrame，索引为日期。
+
+    返回：
+    - 第二大回撤的信息，与 `calculate_max_drawdown` 返回类型一致：
+      (max_drawdown, drawdown_start_date, drawdown_end_date, drawdown_duration, recovery_days)
+      如果无法计算第二大回撤，返回 (None, None, None, None, None)。
+    """
+    # 第一次计算最大回撤
+    max_drawdown, drawdown_start_date, drawdown_end_date, drawdown_duration, recovery_days = calculate_max_drawdown(df)
+
+    # 如果没有数据或回撤无法计算，直接返回空值
+    if max_drawdown is None:
+        return None, None, None, None, None
+
+    # 从数据集中移除最大回撤对应的时间段
+    mask = df.index >= drawdown_start_date
+    df_remaining = df[~mask]
+
+    # 如果剩余数据不足以计算回撤，返回空值
+    if df_remaining.empty:
+        return None, None, None, None, None
+
+    # 计算第二大回撤
+    return calculate_max_drawdown(df_remaining)
 
 
 # 计算年化波动率
@@ -245,7 +313,11 @@ def calculate_and_save_results(fund_codes):
             annualized_return1 = calculate_annualized_return(df, 1)
             annualized_return3 = calculate_annualized_return(df, 3)
             annualized_return5 = calculate_annualized_return(df, 5)
+            annualized_return_smoothed1 = calculate_annualized_return_smoothed(df, 1)
+            annualized_return_smoothed3 = calculate_annualized_return_smoothed(df, 3)
+            annualized_return_smoothed5 = calculate_annualized_return_smoothed(df, 5)
             max_drawdown, start_date, end_date, duration, recovery_days = calculate_max_drawdown(df)
+            nth_drawdown, start_date2, end_date2, duration2, recovery_days2  = calculate_second_largest_drawdown(df)
             annualized_volatility = calculate_annualized_volatility(df)
             sharpe_ratio = calculate_sharpe_ratio(annualized_return, annualized_volatility)
             calmar_ratio = calculate_calmar_ratio(annualized_return, max_drawdown)
@@ -260,12 +332,21 @@ def calculate_and_save_results(fund_codes):
                 '近1年年化收益率': annualized_return1,
                 '近3年年化收益率': annualized_return3,
                 '近5年年化收益率': annualized_return5,
+                '近1年滚动年化收益率': annualized_return_smoothed1,
+                '近3年滚动年化收益率': annualized_return_smoothed3,
+                '近5年滚动年化收益率': annualized_return_smoothed5,
                 '最大回撤': max_drawdown,
                 '回撤开始日期': start_date,
                 '回撤结束日期': end_date,
                 '回撤持续天数': duration,
                 '净值恢复所需天数': recovery_days if recovery_days is not None else '尚未恢复',
                 '最大回撤修复时间': recovery_days+duration if recovery_days is not None else '尚未恢复',
+                '最大回撤2': nth_drawdown,
+                '回撤开始日期2': start_date2,
+                '回撤结束日期2': end_date2,
+                '回撤持续天数2': duration2,
+                '净值恢复所需天数2': recovery_days2 if recovery_days2 is not None else '尚未恢复',
+                '最大回撤修复时间2': recovery_days2 + duration2 if recovery_days is not None else '尚未恢复',
                 '年化波动率': annualized_volatility,
                 '夏普率': sharpe_ratio,
                 '卡玛率': calmar_ratio,
@@ -296,8 +377,8 @@ def main():
     start_time = time.time()  # 程序开始时间
 
     fund_codes = get_fund_codes()  # 获取基金代码列表
-    calculate_and_save_results(fund_codes)  # 计算并保存结果
-    # calculate_and_save_results(['002117'])  # 计算并保存结果
+    # calculate_and_save_results(fund_codes)  # 计算并保存结果
+    calculate_and_save_results(['000436'])  # 计算并保存结果
 
     end_time = time.time()  # 程序结束时间
 
