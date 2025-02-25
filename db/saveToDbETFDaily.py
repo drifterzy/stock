@@ -14,7 +14,7 @@ db_config = {
 
 def update_fund_data():
     # 获取数据
-    fund_open_fund_daily_em_df = ak.fund_open_fund_daily_em()
+    fund_open_fund_daily_em_df = ak.fund_etf_fund_daily_em()
 
     # 找到最新日期的累计净值列
     latest_date_column = None
@@ -44,14 +44,12 @@ def update_fund_data():
             for index, row in fund_open_fund_daily_em_df.iterrows():
                 fund_code = row["基金代码"]
                 print("基金代码",fund_code)
-                if fund_code == '160213':
-                    print("jgeg")
                     # 将 NaN 或空字符串替换为 None
                 cumulative_net_value = None if pd.isna(row[latest_date_column]) or row[latest_date_column] == "" else row[latest_date_column]
-
+                daily_growth_rate = None if pd.isna(row['日增长率']) or row['日增长率'] == "" else row['日增长率']
                 # 检查基金代码是否存在
                 select_query = """
-                    SELECT COUNT(*) FROM fund_net_value WHERE fund_code = %s AND net_value_date = %s
+                    SELECT COUNT(*) FROM etf_net_value WHERE fund_code = %s AND net_value_date = %s
                 """
                 cursor.execute(select_query, (fund_code, net_value_date))
                 exists = cursor.fetchone()[0]
@@ -59,18 +57,18 @@ def update_fund_data():
                 if exists:
                     # 更新累计净值
                     update_query = """
-                        UPDATE fund_net_value
-                        SET cumulative_net_value = %s
+                        UPDATE etf_net_value
+                        SET cumulative_net_value = %s , set daily_growth_rate = %s
                         WHERE fund_code = %s AND net_value_date = %s
                     """
-                    cursor.execute(update_query, (cumulative_net_value, fund_code, net_value_date))
+                    cursor.execute(update_query, (cumulative_net_value, fund_code, net_value_date,daily_growth_rate))
                 else:
                     # 插入新记录
                     insert_query = """
-                        INSERT INTO fund_net_value (fund_code, net_value_date, cumulative_net_value)
-                        VALUES (%s, %s, %s)
+                        INSERT INTO etf_net_value (fund_code, net_value_date, cumulative_net_value,daily_growth_rate)
+                        VALUES (%s, %s, %s, %s)
                     """
-                    cursor.execute(insert_query, (fund_code, net_value_date, cumulative_net_value))
+                    cursor.execute(insert_query, (fund_code, net_value_date, cumulative_net_value,daily_growth_rate))
 
                     # 提交事务
                     connection.commit()

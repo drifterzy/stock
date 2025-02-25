@@ -4,7 +4,7 @@ from os.path import expanduser
 from requests.auth import HTTPBasicAuth
 
 # 加载凭据文件
-with open(expanduser('brain.txt')) as f:
+with open(expanduser('brain_credentials.txt')) as f:
     credentials = json.load(f)
 
 # 从列表中提取用户名和密码

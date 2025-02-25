@@ -157,7 +157,7 @@ def plot_results(data):
 
 # 主程序
 if __name__ == '__main__':
-    symbol = "600586"  # 股票代码
+    symbol = "600941"  # 股票代码
 
 
     data = load_data(symbol, start="20200901", end="20250122")

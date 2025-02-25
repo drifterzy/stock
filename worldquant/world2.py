@@ -4,7 +4,7 @@ from os.path import expanduser
 from requests.auth import HTTPBasicAuth
 
 # 加载凭据文件
-with open(expanduser('brain.txt')) as f:
+with open(expanduser('brain_credentials.txt')) as f:
     credentials = json.load(f)
 
 # 从列表中提取用户名和密码
@@ -53,7 +53,7 @@ def get_datafields(
         count = 100
 
     datafields_list = []
-    for x in range(0, count, 50):
+    for x in range(485, count, 50):
         datafields = s.get(url_template.format(x=x))
         datafields_list.append(datafields.json()['results'])
 
@@ -79,10 +79,9 @@ print(len(datafields_list_fundamental6))
 alpha_list = []
 
 for index,datafield in enumerate(datafields_list_fundamental6,start=1):
-    print(f"正在循环第 {index} 个元素")
-    print("正在将如下alpha表达式与setting封装")
-    alpha_expression = f'group_rank(({datafield})/cap, subindustry)'
-    print(alpha_expression)
+    
+    alpha_expression = f'group_rank(({datafield})/sales, subindustry)'
+    print(f"正在循环第 {index} 个元素,组装alpha表达式: {alpha_expression}")
     simulation_data = {
         "type": "REGULAR",
         "settings": {
@@ -102,15 +101,17 @@ for index,datafield in enumerate(datafields_list_fundamental6,start=1):
         "regular": alpha_expression
     }
     alpha_list.append(simulation_data)
-    print(f"there are {len(alpha_list)} Alphas to simulate")
 
-print(alpha_list[1])
+print(f"there are {len(alpha_list)} Alphas to simulate")
+print(alpha_list[0])
 
 
-# 将Alpha一个一个发送至服务器进行回测（已经测试前两个了）
+# 将Alpha一个一个发送至服务器进行回测,并检查是否断线，如断线则重连，并继续发送
 from time import sleep
 
-for index,alpha in enumerate(alpha_list,start=1):
+#for index,alpha in enumerate(alpha_list,start=1):
+for index in range(0, len(alpha_list)):
+    alpha = alpha_list[index]
     sim_resp = sess.post(
         'https://api.worldquantbrain.com/simulations',
         json=alpha,
@@ -125,32 +126,8 @@ for index,alpha in enumerate(alpha_list,start=1):
                 break
             sleep(retry_after_sec)
         alpha_id = sim_progress_resp.json()["alpha"]  # the final simulation result.# 最终模拟结果
-        print(alpha_id)
+        print(f"{index}: {alpha_id}: {alpha['regular']}")
     except:
         print("no location, sleep for 10 seconds and try next alpha.“没有位置，睡10秒然后尝试下一个字母。”")
         sleep(10)
 
-##################测试前两个##############################
-from time import sleep
-
-for index,alpha in enumerate(alpha_list[0:2],start=1):
-    sim_resp = sess.post(
-        'https://api.worldquantbrain.com/simulations',
-        json=alpha,
-    )
-
-    try:
-        sim_progress_url = sim_resp.headers['Location']
-        while True:
-            sim_progress_resp = sess.get(sim_progress_url)
-            retry_after_sec = float(sim_progress_resp.headers.get("Retry-After", 0))
-            if retry_after_sec == 0:  # simulation done!模拟完成!
-                break
-            sleep(retry_after_sec)
-        alpha_id = sim_progress_resp.json()["alpha"]  # the final simulation result.# 最终模拟结果
-        print(alpha_id)
-    except:
-        print("no location, sleep for 10 seconds and try next alpha.“没有位置，睡10秒然后尝试下一个字母。”")
-        sleep(10)
-
-#################################################
