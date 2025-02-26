@@ -23,17 +23,25 @@ db_config = {
 
 -------------------------------------------------------------------------------------
 我在mysql中的表结构如下，
-CREATE TABLE IF NOT EXISTS etf_net_value (
+CREATE TABLE IF NOT EXISTS etf_net_value_qfq (
     id INT AUTO_INCREMENT PRIMARY KEY,
     fund_code VARCHAR(10) NOT NULL,
     net_value_date DATE NOT NULL,
-    cumulative_net_value DECIMAL(10, 4) NULL,
-	daily_growth_rate DECIMAL(10, 4) NULL,
+    open_value DECIMAL(10, 4) NULL,
+    close_value DECIMAL(10, 4) NULL,
+    high_value DECIMAL(10, 4) NULL,
+    low_value DECIMAL(10, 4) NULL,
+    amount DECIMAL(10, 4) NULL,
+    amount_value DECIMAL(10, 4) NULL,
+    amplitude DECIMAL(10, 4) NULL,
+    price_change DECIMAL(10, 4) NULL,
+    price_change_rate DECIMAL(10, 4) NULL,
+    turnover DECIMAL(10, 4) NULL,
     UNIQUE KEY unique_fund_date (fund_code, net_value_date)
 );
 样例数据如下：
-1	000001	2001-12-18	1.0000 0.98
-其中fund_code是基金代码，net_value_date是日期，cumulative_net_value是累计净值，daily_growth_rate是日增长率
+74049	510300	2025-02-26	4.0280	4.0540	4.0550	4.0190	1345.6581	54.3050	0.9000	0.8200	0.0330	1.5300
+其中fund_code是基金代码，net_value_date是日期
 我使用pymysql连接mysql，连接信息如下：
 db_config = {
     "host": "localhost",
@@ -43,4 +51,4 @@ db_config = {
     "password": "123456",
 }
 -----------------------
-我想根据cumulative_net_value累计净值计算ATR指标，函数传参为基金代码，返回为基金代码，日期，累计净值，atr值
+我想计算ATR指标，函数传参为基金代码，返回为基金代码，日期，累计净值，atr值
