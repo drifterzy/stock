@@ -19,7 +19,7 @@ def update_fund_data():
     # 找到最新日期的累计净值列
     latest_date_column = None
     for column in fund_open_fund_daily_em_df.columns:
-        if "累计净值" in column:
+        if "单位净值" in column:
             latest_date_column = column
             break
 
@@ -45,8 +45,8 @@ def update_fund_data():
                 fund_code = row["基金代码"]
                 print("基金代码",fund_code)
                     # 将 NaN 或空字符串替换为 None
-                cumulative_net_value = None if pd.isna(row[latest_date_column]) or row[latest_date_column] == "" else row[latest_date_column]
-                daily_growth_rate = None if pd.isna(row['日增长率']) or row['日增长率'] == "" else row['日增长率']
+                cumulative_net_value = None if pd.isna(row[latest_date_column]) or row[latest_date_column] == "" or row[latest_date_column] == "---" else row[latest_date_column]
+                daily_growth_rate = None if pd.isna(row['增长率']) or row['增长率'] == "" or row['增长率'] == '---' else row['增长率'].replace('%', '')
                 # 检查基金代码是否存在
                 select_query = """
                     SELECT COUNT(*) FROM etf_net_value WHERE fund_code = %s AND net_value_date = %s
@@ -58,10 +58,10 @@ def update_fund_data():
                     # 更新累计净值
                     update_query = """
                         UPDATE etf_net_value
-                        SET cumulative_net_value = %s , set daily_growth_rate = %s
+                        SET cumulative_net_value = %s , daily_growth_rate = %s
                         WHERE fund_code = %s AND net_value_date = %s
                     """
-                    cursor.execute(update_query, (cumulative_net_value, fund_code, net_value_date,daily_growth_rate))
+                    cursor.execute(update_query, (cumulative_net_value, daily_growth_rate, fund_code, net_value_date))
                 else:
                     # 插入新记录
                     insert_query = """
@@ -70,8 +70,9 @@ def update_fund_data():
                     """
                     cursor.execute(insert_query, (fund_code, net_value_date, cumulative_net_value,daily_growth_rate))
 
-                    # 提交事务
-                    connection.commit()
+            connection.commit()
+            return True
+
 
     except Exception as e:
         print(f"Error: {e}")
@@ -80,7 +81,6 @@ def update_fund_data():
 
     finally:
         connection.close()
-        return True
 
 
 if __name__ == "__main__":
@@ -92,15 +92,15 @@ if __name__ == "__main__":
         # 如果函数执行成功，写入文件
         if result:
             with open("C:\\Users\\leo\\Desktop\\update_status.txt", "a", encoding="utf-8") as file:
-                file.write(f"{current_date} - 更新基金数据成功！\n")
+                file.write(f"{current_date} - 更新ETF基金数据成功！\n")
             print("结果已写入文件：update_status.txt")
         else:
             with open("C:\\Users\\leo\\Desktop\\update_status.txt", "a", encoding="utf-8") as file:
-                file.write(f"{current_date} - 更新基金数据失败。\n")
+                file.write(f"{current_date} - 更新ETF基金数据失败。\n")
             print("更新失败的结果已写入文件：update_status.txt")
     except Exception as e:
         # 处理异常并写入错误信息
         current_date = datetime.now().strftime("%Y-%m-%d")
         with open("C:\\Users\\leo\\Desktop\\update_status.txt", "a", encoding="utf-8") as file:
-            file.write(f"{current_date} - 更新基金数据时发生错误：{str(e)}\n")
+            file.write(f"{current_date} - 更新ETF基金数据时发生错误：{str(e)}\n")
         print("异常信息已写入文件：update_status.txt")

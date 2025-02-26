@@ -43,7 +43,7 @@ def insert_data(fund_code, data):
     """
     for _, row in data.iterrows():
         # 将 NaN 替换为 None
-        cumulative_net_value = None if np.isnan(row['累计净值']) else row['累计净值']
+        cumulative_net_value = None if np.isnan(row['单位净值']) else row['单位净值']
         daily_growth_rate = None if np.isnan(row['日增长率']) else row['日增长率']
         cur.execute(insert_query, (fund_code, row['净值日期'], cumulative_net_value, daily_growth_rate))
     conn.commit()
@@ -65,6 +65,7 @@ if __name__ == "__main__":
         fund_code = fund['基金代码']
         print(f"Processing fund: {fund_code}")
         try:
+            # fund_open_fund_info_em_df = ak.fund_etf_fund_info_em(fund=fund_code, start_date="20000101", end_date="20500101")
             fund_open_fund_info_em_df = ak.fund_etf_fund_info_em(fund=fund_code, start_date="20000101", end_date="20500101")
             insert_data(fund_code, fund_open_fund_info_em_df)
         except Exception as e:
