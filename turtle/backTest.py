@@ -157,10 +157,10 @@ def plot_results(data):
 
 # 主程序
 if __name__ == '__main__':
-    symbol = "600586"  # 股票代码
+    symbol = "600941"  # 股票代码
 
 
-    data = load_data(symbol, start="20020901", end="20250122")
+    data = load_data(symbol, start="20200901", end="20250122")
     # data = turtle_signals(data)
     # data = backtest(data, slippage=0.01, cost=0.001)  # 设置滑点和交易成本
     data = turtle_signals(data, n_entry=40, n_exit=20)
