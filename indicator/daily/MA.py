@@ -27,7 +27,7 @@ def calculate_ma(fund_code, ma_days=40):
     try:
         # 查询特定基金的净值数据，按日期排序
         query = """
-        SELECT fund_code, net_value_date, close_value
+        SELECT fund_code, net_value_date, close_value, open_value
         FROM etf_net_value_qfq
         WHERE fund_code = %s
         ORDER BY net_value_date;
@@ -40,7 +40,7 @@ def calculate_ma(fund_code, ma_days=40):
         df[ma_column] = df["close_value"].rolling(window=ma_days, min_periods=1).mean()
 
         # 返回结果，包括基金代码、日期、当日净值以及指定天数的MA列
-        result = df[["fund_code", "net_value_date", "close_value", ma_column]]
+        result = df[["fund_code", "net_value_date", "close_value", "open_value", ma_column]]
         return result
 
     except Exception as e:
