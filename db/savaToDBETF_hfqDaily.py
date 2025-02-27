@@ -47,7 +47,7 @@ def insert_data(fund_code, data):
     conn = pymysql.connect(**db_config)
     cur = conn.cursor()
     insert_query = """
-    INSERT INTO etf_net_value (fund_code, net_value_date, open_value,close_value,high_value,low_value,amount,amount_value,amplitude,price_change,price_change_rate,turnover)
+    INSERT INTO etf_net_value_hfq (fund_code, net_value_date, open_value,close_value,high_value,low_value,amount,amount_value,amplitude,price_change,price_change_rate,turnover)
     VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
     ON DUPLICATE KEY UPDATE 
     open_value = VALUES(open_value),
