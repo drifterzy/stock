@@ -1,0 +1,5 @@
+我有一个dataframe结构如下
+fund_code	net_value_date	close_value	open_value	ma40	ma100	buy_time	buy_price	buy_quantity	buy_total	sell_time	sell_price	sell_quantity	sell_total	capital
+510300	2013-01-08 00:00:00	1.887	1.897	1.649125	1.64651	2013-01-09 00:00:00	1.883	5200	9791.6					10020.8
+510300	2013-05-08 00:00:00	1.906	1.907	1.87955	1.88321					2013-05-09 00:00:00	1.902	5200	9890.4	10098.8
+我想分析这个系统的表现，输出每次的交易结果，格式为每次交易的买入时间|卖出时间|持有时间|持有期间盈利金额|持有时间盈利比率
