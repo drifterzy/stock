@@ -4,8 +4,7 @@ from analysis.analysis import analyze_trades_and_calculate_metrics
 from indicator.daily.ATR import calculate_atr
 from indicator.daily.MA import calculate_ma
 
-
-def execute_trades_with_atr(df, initial_capital=10000, trade_size=100, atr_multiplier=2):
+def execute_trades_with_atr(df, initial_capital=10000, trade_size=100, atr_multiplier=5, ma_short_days=28, ma_long_days=110):
     df = df.sort_values(by='net_value_date').reset_index(drop=True)
 
     df['stop_loss'] = None
@@ -25,6 +24,9 @@ def execute_trades_with_atr(df, initial_capital=10000, trade_size=100, atr_multi
     buy_date = None
     stop_loss = None
 
+    short_col = f'ma{ma_short_days}'
+    long_col = f'ma{ma_long_days}'
+
     for idx in range(len(df) - 1):  # 遍历到倒数第二行，确保可以取到下一天数据
         row = df.iloc[idx]
         next_day = df.iloc[idx + 1]
@@ -43,7 +45,7 @@ def execute_trades_with_atr(df, initial_capital=10000, trade_size=100, atr_multi
             position = 0
             stop_loss = None  # 清除止损价
 
-        if row['ma5'] > row['ma10'] and position == 0:  # 触发买入信号
+        if row[short_col] > row[long_col] and position == 0:  # 触发买入信号
             buy_quantity = (capital // next_day['open_value']) // trade_size * trade_size
             if buy_quantity > 0:
                 buy_price = next_day['open_value']
@@ -59,7 +61,7 @@ def execute_trades_with_atr(df, initial_capital=10000, trade_size=100, atr_multi
                 capital -= buy_quantity * buy_price
                 position = buy_quantity
 
-        elif row['ma5'] < row['ma10'] and position > 0:  # 触发卖出信号
+        elif row[short_col] < row[long_col] and position > 0:  # 触发卖出信号
             sell_price = next_day['open_value']
             sell_date = next_day['net_value_date']
             sell_quantity = position
@@ -78,34 +80,29 @@ def execute_trades_with_atr(df, initial_capital=10000, trade_size=100, atr_multi
 
     return df
 
-# 示例调用
-# df = execute_trades_with_atr(your_dataframe)
-# print(df)
-
 fund_code = '510300'
 ma_short_days = 28
 ma_long_days = 110
-atr_multiplier = 2
+atr_multiplier = 5
+
 # 获取均线数据
 result_short = calculate_ma(fund_code, ma_days=ma_short_days)
 result_long = calculate_ma(fund_code, ma_days=ma_long_days)
 # 获取ATR
-atr_result = calculate_atr(fund_code,period=14)
-# 合并40日和100日均线的结果
+atr_result = calculate_atr(fund_code, period=14)
+
+# 合并均线和ATR的结果
 combined_result = pd.merge(result_short, result_long, on=["fund_code", "net_value_date", "close_value", "open_value"], how="outer")
 combined_result = pd.merge(combined_result, atr_result, on=["fund_code", "net_value_date", "close_value", "open_value"], how="outer")
 
-result_df = execute_trades_with_atr(combined_result,atr_multiplier=2)
+result_df = execute_trades_with_atr(combined_result, atr_multiplier=atr_multiplier, ma_short_days=ma_short_days, ma_long_days=ma_long_days)
 analysis = analyze_trades_and_calculate_metrics(result_df)
 
-# 保存
-# 定义 Excel 文件路径，包含日期信息
+# 保存到 Excel
 file_path = f'data/MACombineATR_{ma_short_days}_{ma_long_days}_{atr_multiplier}.xlsx'
-# 使用 ExcelWriter 保存多个 Sheet
 with pd.ExcelWriter(file_path, engine='xlsxwriter') as writer:
     result_df.to_excel(writer, sheet_name='Trades', index=False)  # 交易数据
     analysis.to_excel(writer, sheet_name='Analysis', index=False)  # 分析结果
 
 print(f'数据已成功保存至 {file_path}')
-# 打印结果
 print(result_df)
