@@ -95,7 +95,7 @@ atr_result = calculate_atr(fund_code,period=14)
 combined_result = pd.merge(result_short, result_long, on=["fund_code", "net_value_date", "close_value", "open_value"], how="outer")
 combined_result = pd.merge(combined_result, atr_result, on=["fund_code", "net_value_date", "close_value", "open_value"], how="outer")
 
-result_df = execute_trades_with_atr(combined_result,atr_multiplier=2)
+result_df = execute_trades_with_atr(combined_result,atr_multiplier)
 analysis = analyze_trades_and_calculate_metrics(result_df)
 
 # 保存
